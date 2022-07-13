@@ -30,6 +30,7 @@ import (
 	"github.com/onflow/flow-cli/internal/emulator"
 	"github.com/onflow/flow-cli/internal/events"
 	"github.com/onflow/flow-cli/internal/keys"
+	"github.com/onflow/flow-cli/internal/multisig"
 	"github.com/onflow/flow-cli/internal/project"
 	"github.com/onflow/flow-cli/internal/quick"
 	"github.com/onflow/flow-cli/internal/scripts"
@@ -75,6 +76,7 @@ func main() {
 	cmd.AddCommand(app.Cmd)
 	cmd.AddCommand(signatures.Cmd)
 	cmd.AddCommand(snapshot.Cmd)
+	cmd.AddCommand(multisig.Cmd)
 
 	command.InitFlags(cmd)
 	// Set usage template to custom template

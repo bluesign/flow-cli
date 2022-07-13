@@ -19,7 +19,7 @@ flow multisig sign <transaction id ulr>
 ## Example Usage
 
 ```shell
-> flow multisig sign https://path/to/tx/identifier --signer alice 
+> flow multisig sign https://path/to/tx/identifier --signer alice --yes
 
 🙏 RLP retrieved successfully
 ✨ Signed RLP Posted successfully
@@ -28,10 +28,50 @@ flow multisig sign <transaction id ulr>
 
 By not including `--yes` the transaction will be displayed so the user can verify what is being signed
 
+```shell
+> flow multisig sign https://path/to/tx/identifier --signer alice
+
+ID      5ae07ebace0444fff0b1932d2ffaea9504f991fd4245209e96c9b9f62412f5a0
+Payer   f8d6e0586b0a20c7
+Authorizers     [f8d6e0586b0a20c7]
+
+Proposal Key:
+    Address     f8d6e0586b0a20c7
+    Index       0
+    Sequence    19
+
+No Payload Signatures
+
+No Envelope Signatures
+
+
+Arguments       No arguments
+
+Code
+
+transaction {
+  prepare(signer: AuthAccount) {
+    log("Hello, World!")
+  }
+}
+
+
+
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? ⚠️  Do you want to SIGN this transaction?: 
+    No
+  ▸ Yes
+
+
+🙏 RLP retrieved successfully
+✨ Signed RLP Posted successfully
+
+```
+
 ## Arguments
 
 ### Url to transaction RLP
-- Name: `identifier`
+- Name: `identifier url`
 - Valid inputs: RLP server URL to the transaction.
 
 Specify the full url containing transaction identifier.

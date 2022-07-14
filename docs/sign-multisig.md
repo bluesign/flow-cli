@@ -13,7 +13,7 @@ Use this functionality after a multisig transaction has been generated:
  - After the transaction has been signed the resulting signed RLP will be posted to the server
 
 ```shell
-flow multisig sign <transaction id ulr>
+flow multisig sign <transaction id url>
 ```
 
 ## Example Usage

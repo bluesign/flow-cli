@@ -30,12 +30,10 @@ import (
 
 	"github.com/onflow/flow-cli/internal/command"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
-	"github.com/onflow/flow-cli/pkg/flowkit/util"
 )
 
 type flagsSign struct {
-	Signer  string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	Signer string `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
 }
 
 var signFlags = flagsSign{}
@@ -58,14 +56,14 @@ func sign(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	multisig_url := args[0]
-	if multisig_url == "" {
+	multisigUrl := args[0]
+	if multisigUrl == "" {
 		return nil, fmt.Errorf("multisig url is empty")
 	}
-	payload, err := retrieve(multisig_url)
+	payload, err := retrieve(multisigUrl)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to read multisig RLP from %s: %v", multisig_url, err)
+		return nil, fmt.Errorf("failed to read multisig RLP from %s: %v", multisigUrl, err)
 	}
 
 	signer, err := state.Accounts().ByName(signFlags.Signer)
@@ -82,25 +80,18 @@ func sign(
 	tx := signed.FlowTransaction()
 	msg := tx.Encode()
 
-	var b bytes.Buffer
-	writer := util.CreateTabWriter(&b)
-	_, _ = fmt.Fprintf(writer, "%x", string(msg))
-	_ = writer.Flush()
+	signedRlp := fmt.Sprintf("%x", string(msg))
 
-	err = post(multisig_url, b.String())
+	err = post(multisigUrl, signedRlp)
 
 	return &MultisigResult{
 		tx:     tx,
 		rlp:    string(payload),
-		signed: b.String(),
+		signed: signedRlp,
 	}, err
 }
 
 func retrieve(rlpUrl string) ([]byte, error) {
-
-	if rlpUrl == "" {
-		return nil, fmt.Errorf("multisig url is empty")
-	}
 
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
@@ -118,12 +109,7 @@ func retrieve(rlpUrl string) ([]byte, error) {
 		return nil, fmt.Errorf("error downloading multisig identifier")
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+	return ioutil.ReadAll(resp.Body)
 }
 
 func post(rlpUrl string, signed string) error {

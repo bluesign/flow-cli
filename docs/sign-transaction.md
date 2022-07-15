@@ -64,15 +64,22 @@ f90184f...a199bfd9b837a11a0885f9104b54014750f5e3e5bfe4a5795968b0df86769dd54c0
 
 ## Arguments
 
-### Built Transaction Filename
-- Name: `built transaction filename`
-- Valid inputs: Any filename and path valid on the system.
+### Built Transaction Filename or Remote Server URL
+- Name: `built transaction filename | remote server url`
+- Valid inputs: Any filename and path valid on the system or fully qualified remote server url.
 
 Specify the filename containing valid transaction payload that will be used for signing.
 To be used with the `flow transaction build` command.
 
+When --from-remote-url flag is used the argument needs to be a fully qualified url to transaction RLP
+Example: `flow transaction sign --from-remote-url https://fully/qualified/url --signer alice`
 ## Flags
 
+### From Remote Url
+- Flag: `--from-remote-url`
+- Default: false
+
+Specify when argument is a fully qualified url to transaction RLP. After signing the result is posted to the remote url.
 ### Include Fields
 
 - Flag: `--include`

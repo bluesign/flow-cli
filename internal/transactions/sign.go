@@ -19,6 +19,7 @@
 package transactions
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
@@ -84,7 +85,7 @@ func sign(
 
 	if signFlags.FromRemoteUrl {
 		tx := signed.FlowTransaction()
-		signedRlp := fmt.Sprintf("%x", string(tx.Encode()))
+		signedRlp := hex.EncodeToString(tx.Encode())
 		err = services.Transactions.PostRlp(filenameOrUrl, signedRlp)
 
 		if err != nil {

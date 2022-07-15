@@ -19,7 +19,10 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/onflow/flow-cli/pkg/flowkit"
 
@@ -275,4 +278,40 @@ func (t *Transactions) Send(
 	t.logger.StopProgress()
 
 	return sentTx, res, err
+}
+
+func (t *Transactions) GetRlp(rlpUrl string) ([]byte, error) {
+
+	client := http.Client{
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			r.URL.Opaque = r.URL.Path
+			return nil
+		},
+	}
+	resp, err := client.Get(rlpUrl)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error downloading RLP identifier")
+	}
+
+	return ioutil.ReadAll(resp.Body)
+}
+
+func (t *Transactions) PostRlp(rlpUrl string, signed string) error {
+
+	resp, err := http.Post(rlpUrl, "application/text", bytes.NewBufferString(signed))
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error posting signed RLP")
+	}
+
+	return nil
 }

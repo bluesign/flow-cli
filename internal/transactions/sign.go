@@ -26,19 +26,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/onflow/flow-cli/internal/command"
+	"github.com/onflow/flow-cli/pkg/flowkit/output"
 	"github.com/onflow/flow-cli/pkg/flowkit/services"
 )
 
 type flagsSign struct {
-	Signer  string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
-	Include []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	Signer        string   `default:"emulator-account" flag:"signer" info:"name of the account used to sign"`
+	Include       []string `default:"" flag:"include" info:"Fields to include in the output. Valid values: signatures, code, payload."`
+	FromRemoteUrl bool     `default:"false" flag:"from-remote-url" info:"Indicates argument is a server Url where RLP can be fetched, signed RLP will be posted back to remote url."`
 }
 
 var signFlags = flagsSign{}
 
 var SignCommand = &command.Command{
 	Cmd: &cobra.Command{
-		Use:     "sign <built transaction filename>",
+		Use:     "sign [<built transaction filename> | <url> --from-remote-url]",
 		Short:   "Sign built transaction",
 		Example: "flow transactions sign ./built.rlp --signer alice",
 		Args:    cobra.ExactArgs(1),
@@ -54,10 +56,20 @@ func sign(
 	services *services.Services,
 	state *flowkit.State,
 ) (command.Result, error) {
-	filename := args[0]
-	payload, err := readerWriter.ReadFile(filename)
+	var payload []byte
+	var err error
+	yesOption := globalFlags.Yes
+	filenameOrUrl := args[0]
+
+	if signFlags.FromRemoteUrl {
+		payload, err = services.Transactions.GetRlp(filenameOrUrl)
+		yesOption = false // force user to view remote tx
+	} else {
+		payload, err = readerWriter.ReadFile(filenameOrUrl)
+	}
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filename, err)
+		return nil, fmt.Errorf("failed to read partial transaction from %s: %v", filenameOrUrl, err)
 	}
 
 	signer, err := state.Accounts().ByName(signFlags.Signer)
@@ -65,9 +77,20 @@ func sign(
 		return nil, fmt.Errorf("signer account: [%s] doesn't exists in configuration", signFlags.Signer)
 	}
 
-	signed, err := services.Transactions.Sign(signer, payload, globalFlags.Yes)
+	signed, err := services.Transactions.Sign(signer, payload, yesOption)
 	if err != nil {
 		return nil, err
+	}
+
+	if signFlags.FromRemoteUrl {
+		tx := signed.FlowTransaction()
+		signedRlp := fmt.Sprintf("%x", string(tx.Encode()))
+		err = services.Transactions.PostRlp(filenameOrUrl, signedRlp)
+
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf("%s Signed RLP Posted successfully\n", output.SuccessEmoji())
 	}
 
 	return &TransactionResult{
